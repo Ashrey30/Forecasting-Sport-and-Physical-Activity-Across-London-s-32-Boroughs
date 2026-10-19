@@ -7,18 +7,6 @@ years of Sport England's **Active Lives Adult Survey** (2015–16 to 2022–23,
 
 Prepared for a London-based non-profit sports organisation.
 
----
-
-> **Note on contributions and commit history.** Because the four workstreams
-> had little interdependency, the git history shows relatively few commits,
-> most made by a single member. This reflects how the team worked rather than
-> the distribution of effort: all four members independently developed and
-> tested separate modelling approaches to establish which performed best. We
-> then took the strongest approach forward, chosen on a combination of runtime,
-> accuracy and error rates. Every member contributed substantially to the
-> project.
-
----
 
 ## Table of contents
 
