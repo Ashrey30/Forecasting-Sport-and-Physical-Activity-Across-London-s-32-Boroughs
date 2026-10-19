@@ -9,6 +9,17 @@ Prepared for a London-based non-profit sports organisation.
 
 ---
 
+> **Note on contributions and commit history.** Because the four workstreams
+> had little interdependency, the git history shows relatively few commits,
+> most made by a single member. This reflects how the team worked rather than
+> the distribution of effort: all four members independently developed and
+> tested separate modelling approaches to establish which performed best. We
+> then took the strongest approach forward, chosen on a combination of runtime,
+> accuracy and error rates. Every member contributed substantially to the
+> project.
+
+---
+
 ## Table of contents
 
 - [What this project does](#what-this-project-does)
@@ -105,48 +116,97 @@ pip install pandas numpy scikit-learn lightgbm matplotlib pyarrow \
 
 ## Project layout
 
+The repository has two states: **before** you run the pipeline (the files you
+start with) and **after** (the same files plus every output folder the run
+generates). Both are shown below.
+
+### Before running — the original repository
+
+These are the files and folders that ship with the project. Nothing here is
+generated; this is what you begin with.
+
 ```
 project/
-├── run_project.bat            ← Windows: install + run everything
-├── run_project.sh             ← macOS/Linux: install + run everything
+├── run_project.bat            ← Windows: install dependencies + run everything
+├── run_project.sh             ← macOS/Linux: install dependencies + run everything
 ├── README.md                  ← this file
 │
-├── dictionaries/              ← YOU provide: 8 data-dictionary files
-├── csvs/                      ← YOU provide: 8 annual CSV extracts
+├── csvs/                      ← YOU provide: 8 annual Active Lives CSV extracts
+├── dictionaries/              ← YOU provide: 8 matching data-dictionary files
 │
-├── scripts/                   ← all pipeline code
-│   ├── run_all.py             ← runs every stage in order, with timing
-│   ├── viz_theme.py           ← shared chart style (imported, not run)
-│   │
-│   ├── parse_dictionaries.py  ← stage 0
-│   ├── profile_waves.py       ← stage 0
-│   ├── harmonise_waves.py     ← stage 1
-│   ├── 04_build_dataset2.py   ← stage 1
-│   ├── 05_propensity_model.py ← stage 2
-│   ├── 06_composition_vs_place.py
-│   ├── 07_target_feasibility.py
-│   ├── 08_multi_target_ablation.py
-│   ├── 09_forecast.py         ← stage 3 (the forecasting engine)
-│   ├── 10_visualise.py        ← stage 4
-│   ├── 11_stageA_participation.py   ← brief section 1
-│   ├── 12_stageB_demographics.py    ← brief section 2
-│   ├── 13_stageC_indoor_outdoor.py  ← brief section 3
-│   ├── 14_stageD_volunteering.py    ← brief section 4
-│   └── 15_model_scorecard.py  ← model metrics table
+├── LaTeX/                     ← the written dissertation report
+│   ├── DataScience_UoB_MSc_thesis(2).tex   ← the report source
+│   ├── dissertation.cls       ← document class / formatting
+│   ├── sample_bibtex.bib      ← bibliography
+│   ├── Team_04_Group_Report.pdf      ← group report
+│   ├── logo_uob_color.pdf     ← university logo used on the title page
+│   └── figures/               ← all figures used in the report
 │
-└── (output folders, created on run)
-    ├── parsed/                ← dictionary output + wave manifest
-    ├── model_out/             ← model diagnostics + figures
-    ├── forecast_out/          ← forecasts, scenarios, figures
-    ├── viz_out/               ← exploratory + prediction figures
-    ├── stageA_out/ … stageD_out/   ← the four brief sections
-    ├── scorecard_out/         ← model_scorecard.csv / .md
-    └── pipeline_runtime.txt   ← per-stage and total timing
+└── scripts/                   ← all pipeline code
+    ├── run_all.py             ← runs every stage in order, with timing
+    ├── viz_theme.py           ← shared chart style (imported, never run directly)
+    │
+    ├── parse_dictionaries.py       ← stage 0: read the dictionaries
+    ├── profile_waves.py            ← stage 0: profile the years, flag breaks
+    ├── harmonise_waves.py          ← stage 1: build the individual dataset
+    ├── 04_build_dataset2.py        ← stage 1: build the cell panel
+    ├── 05_propensity_model.py      ← stage 2: the propensity model
+    ├── 06_composition_vs_place.py  ← stage 2: composition vs place
+    ├── 07_target_feasibility.py    ← stage 2: which targets are forecastable
+    ├── 08_multi_target_ablation.py ← stage 2: the provision gradient
+    ├── 09_forecast.py              ← stage 3: the forecasting engine
+    ├── 10_visualise.py             ← stage 4: exploratory figures
+    ├── 11_stageA_participation.py  ← brief section 1: participation
+    ├── 12_stageB_demographics.py   ← brief section 2: demographics
+    ├── 13_stageC_indoor_outdoor.py ← brief section 3: indoor vs outdoor
+    ├── 14_stageD_volunteering.py   ← brief section 4: volunteering
+    ├── 15_model_scorecard.py       ← model metrics table
+    ├── 16_benchmarks.py            ← validation: benchmark floors
+    ├── 17_backtest.py              ← validation: rolling-origin back-test
+    ├── 18_corroboration.py         ← validation: right-reason check
+    ├── 19_explainer_figures.py     ← plain-language method figures
+    ├── 20_evidence_figures.py      ← evidence-the-forecast-works figures
+    ├── 21_sensitivity.py           ← robustness: shrinkage + interval sources
+    └── 22_requested_graphs.py      ← explanatory line graphs
+```
+
+### After running — the folders the pipeline generates
+
+Running `run_project.bat` (or `run_project.sh`) creates all of the following.
+Every folder below is **generated output** — none of it exists before the run,
+and the whole set can be deleted and regenerated at any time.
+
+```
+project/
+│   … (all of the original files above, unchanged) …
+│
+├── dataset1_individual.parquet   ← the cleaned people-level dataset (135,497 rows)
+├── dataset2_cells.parquet        ← the aggregated borough × demographic panel
+│
+├── parsed/                    ← dictionary lookups + wave manifest        (stage 0)
+├── model_out/                 ← model diagnostics, residuals, figures     (stage 2)
+├── forecast_out/              ← forecasts, scenarios, borough figures     (stage 3)
+├── viz_out/                   ← exploratory and prediction figures        (stage 4)
+├── stageA_out/                ← brief section 1: participation figures/CSVs
+├── stageB_out/                ← brief section 2: demographics figures/CSVs
+├── stageC_out/                ← brief section 3: indoor vs outdoor
+├── stageD_out/                ← brief section 4: volunteering
+├── scorecard_out/             ← model_scorecard.csv / .md                 (stage 6)
+├── benchmark_out/             ← classifier floors + borough rate panel    (stage 7)
+├── backtest_out/              ← back-test results + interval calibration  (stage 7)
+├── corroboration_out/         ← the right-reason scatter + CSV            (stage 7)
+├── explainer_out/             ← plain-language method figures             (stage 8)
+├── evidence_out/              ← predicted-vs-actual and skill figures     (stage 8)
+├── sensitivity_out/           ← shrinkage sweep + interval-source figures (stage 9)
+├── graphs_out/                ← the explanatory line graphs               (stage 9)
+└── pipeline_runtime.txt       ← per-stage and total timing
 ```
 
 > **Note.** The scripts also run fine sitting directly in the project root
-> instead of a `scripts/` folder — the runner checks both. Keep
-> `viz_theme.py` beside the stage scripts; it is imported by the figure code.
+> instead of a `scripts/` folder — the runner checks both. Keep `viz_theme.py`
+> beside the stage scripts; it is imported by the figure code. The `LaTeX/`
+> folder is independent of the pipeline: it holds the written report and is not
+> read or modified by any script.
 
 ---
 
@@ -206,6 +266,16 @@ Run automatically by `run_all.py`, in this order:
 | 5 | `13_stageC_indoor_outdoor.py` | Brief §3 — indoor vs outdoor by level and by inner/outer London. |
 | 5 | `14_stageD_volunteering.py` | Brief §4 — who volunteers, and in what roles. |
 | 6 | `15_model_scorecard.py` | Full metrics table for both models. |
+| 7 | `16_benchmarks.py` | Classifier floors (prevalence, single-feature) and forecast benchmarks (naïve, drift). |
+| 7 | `17_backtest.py` | **Rolling-origin back-test**: forward forecasts at each origin, per borough; measures forecast skill and the interval calibration. |
+| 7 | `09_forecast.py` *(again)* | Re-run so the deployed intervals pick up the calibration the back-test measured (see two-pass note below). |
+| 7 | `18_corroboration.py` | Tests whether the forecast is accurate for the right reason (skill vs demographic explainability). |
+| 8 | `19_explainer_figures.py` | Plain-language figures: how each method works. |
+| 8 | `20_evidence_figures.py` | Evidence figures: predicted-vs-actual and skill, built on the back-test. |
+| 9 | `21_sensitivity.py` | Robustness checks: the shrinkage λ sweep (forecast barely moves) and the interval-source decomposition (coefficient uncertainty is the smallest source). |
+| 9 | `22_requested_graphs.py` | Three explanatory line graphs: the λ sensitivity line, the flagship forecast vs the naïve benchmark across years, and the back-test error comparison. |
+
+**Two-pass ordering (important).** The forecasting engine (`09`) runs **twice**. The first run produces the central forecasts. The back-test (`17`) then measures how much year-to-year uncertainty the intervals were missing and writes `backtest_out/interval_calibration.json`. The second run of `09` reads that file and widens the deployed intervals so their 90% bands are honest. The central forecasts are identical on both runs — only the interval widths change. `run_all.py` handles this ordering automatically.
 
 Three checks run automatically and will flag or halt the pipeline if they
 fail: the activity classification must match Sport England's published
@@ -226,6 +296,13 @@ forecast must begin at the last observed value.
 | Top-10 / least-5 boroughs | `forecast_out/figX2_*`, `figX3_*` |
 | Brief §1–4 figures and tables | `stageA_out/` … `stageD_out/` |
 | Exploratory & prediction visuals | `viz_out/` |
+| Benchmark floors (classifier + forecast) | `benchmark_out/classifier_floors.csv` |
+| Back-test results & skill, interval calibration | `backtest_out/` (`backtest_by_origin.csv`, `backtest_skill.png`, `interval_calibration.json`) |
+| Corroboration (right-reason evidence) | `corroboration_out/corroboration_scatter.png` |
+| Explanatory figures (how it works) | `explainer_out/` |
+| Evidence figures (that it works) | `evidence_out/` (`evid_pred_vs_actual.png` etc.) |
+| Sensitivity & interval-source checks | `sensitivity_out/` (`sens_lambda.png`, `sens_variance_sources.png`) |
+| Explanatory line graphs | `graphs_out/` (`req_sensitivity_line.png`, `req_baseline_vs_flagship.png`, `req_backtest.png`) |
 | How long each stage took | `pipeline_runtime.txt` |
 
 Figures prefixed `figX` are the standalone, themed charts (one message per
@@ -255,6 +332,25 @@ figure). Every figure carries a short caption describing what it shows.
 The model scorecard (real data): **test accuracy 0.67, AUC 0.70, train–CV
 accuracy gap 0.002** — the tiny gap being the quantitative proof the model is
 not overfitting.
+
+**Forecast validation (real data).** The forecast is not merely produced but
+tested. Three results establish it:
+
+- **Skill +0.20** — in rolling-origin back-testing, the forecast reduces
+  borough error by about a fifth versus assuming no change, at every clean
+  origin (mean error 2.7pp vs 3.4pp for naïve).
+- **Coverage 94%** — the 90% intervals were found over-confident (53%) and
+  recalibrated against measured out-of-sample error; coverage now sits near
+  90%, erring slightly conservative.
+- **Correlation +0.74** — the forecast is accurate for the right reason: it
+  predicts best on the boroughs whose activity is demographically explained.
+
+Two robustness checks close the remaining questions a specialist would ask. The
+shrinkage constant λ is shown not to matter — the London forecast moves just
+**0.04 points** across its whole range, and even the most sensitive borough
+moves only **1.3 points**. And the uncertainty range is decomposed into its
+three sources, confirming the model's own coefficient uncertainty (**0.35 pp**)
+is the smallest; year-to-year process variation (**5.66 pp**) dominates.
 
 ---
 
@@ -297,7 +393,9 @@ know:
   defects.
 - **The forecast improves with each added year.** More non-pandemic data firms
   up the behavioural trend, so the long-run scenarios become less speculative
-  over time. This is a standing capability, not a one-off analysis.
+  over time. This is a standing capability, not a one-off analysis. Each added
+  year also gives the rolling-origin back-test one more origin, so the
+  validation strengthens as the series grows.
 
 ---
 
